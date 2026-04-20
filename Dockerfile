@@ -32,6 +32,10 @@ FROM prestashop/prestashop:8.1-apache
 # Copy built files from builder
 COPY --from=builder /var/www/html /var/www/html
 
+# Fix Apache MPM conflict (More than one MPM loaded)
+RUN a2dismod mpm_event mpm_worker || true && \
+    a2enmod mpm_prefork || true
+
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html
 
