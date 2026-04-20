@@ -3,20 +3,24 @@ FROM prestashop/base:8.1-apache AS builder
 
 WORKDIR /var/www/html
 
+# Install Composer
+RUN php -r "copy('https://getcomposer.org/installer', '/tmp/composer-setup.php');" && \
+    php /tmp/composer-setup.php --no-ansi --install-dir=/usr/local/bin --filename=composer && \
+    rm -rf /tmp/composer-setup.php
+
 # Copy only composer and package files first for better caching
 COPY composer.json composer.lock ./
 # PrestaShop needs some folders to exist for composer plugins
 RUN mkdir -p modules themes override
 
 # Install composer dependencies
-# We use --ignore-platform-reqs if needed, but prestashop/base should have them
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 # Copy the rest of the source code
 COPY . .
 
 # Install Node.js and build assets
-RUN apt-get update && apt-get install -y curl && \
+RUN apt-get update && apt-get install -y curl gnupg && \
     curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
     apt-get install -y nodejs && \
     ./tools/assets/build.sh all
