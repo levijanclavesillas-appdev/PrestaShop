@@ -74,7 +74,18 @@ if [ -n "$PS_DOMAIN" ] && [ -f ./app/config/parameters.php ]; then
         # Restrict countries to Southeast Asia (SEA)
         echo "Restricting countries to SEA (PH, SG, MY, ID, TH, VN, BN, KH, LA, MM, TL)..."
         mysql -h "$DB_SERVER" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWD" "$DB_NAME" -e "UPDATE ps_country SET active=0; UPDATE ps_country SET active=1 WHERE iso_code IN ('PH', 'SG', 'MY', 'ID', 'TH', 'VN', 'BN', 'KH', 'LA', 'MM', 'TL');" || true
-        echo "SEA Country restriction and session configuration updated."
+        
+        # Authorize instapayment for all active countries, currencies, and groups
+        echo "Authorizing instapayment module..."
+        mysql -h "$DB_SERVER" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWD" "$DB_NAME" -e "
+            SET @module_id = (SELECT id_module FROM ps_module WHERE name = 'instapayment');
+            INSERT IGNORE INTO ps_module_country (id_module, id_shop, id_country) SELECT @module_id, 1, id_country FROM ps_country WHERE active = 1;
+            INSERT IGNORE INTO ps_module_currency (id_module, id_shop, id_currency) SELECT @module_id, 1, id_currency FROM ps_currency WHERE active = 1;
+            INSERT IGNORE INTO ps_module_group (id_module, id_shop, id_group) SELECT @module_id, 1, id_group FROM ps_group;
+            INSERT IGNORE INTO ps_module_carrier (id_module, id_shop, id_reference) SELECT @module_id, 1, id_reference FROM ps_carrier WHERE active = 1 AND deleted = 0;
+        " || true
+        
+        echo "SEA Country restriction and instapayment authorization completed."
     ) &
 fi
 
