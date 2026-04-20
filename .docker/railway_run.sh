@@ -20,6 +20,20 @@ if [ -n "$PORT" ]; then
     sed -i "s/<VirtualHost \*:80>/<VirtualHost \*:$PORT>/g" /etc/apache2/sites-available/000-default.conf
 fi
 
+# Set ServerName to avoid warnings and potential redirect issues
+if [ -n "$PS_DOMAIN" ]; then
+    echo "ServerName $PS_DOMAIN" > /etc/apache2/conf-available/servername.conf
+    a2enconf servername
+fi
+
+# Configure Trusted Proxies for Railway (standard for reverse proxies)
+if [ -n "$PS_TRUSTED_PROXIES" ]; then
+    echo "Configuring trusted proxies: $PS_TRUSTED_PROXIES"
+else
+    # Default to common Railway/Docker proxy ranges if not set
+    export PS_TRUSTED_PROXIES="10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
+fi
+
 # PrestaShop official image uses /tmp/docker_run.sh as its entrypoint logic.
 # It handles installation if DB_* variables are provided and PS_INSTALL_AUTO=1.
 if [ -f /tmp/docker_run.sh ]; then

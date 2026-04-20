@@ -15,3 +15,6 @@ docker-compose.*.yml
 Dockerfile
 railway.json
 README_RAILWAY.md
+app/config/parameters.php
+config/settings.inc.php
+.env.local
