@@ -35,11 +35,16 @@ echo "<VirtualHost *:$REAL_PORT>
     </Directory>
 </VirtualHost>" > /etc/apache2/sites-available/000-default.conf
 
-# Set ServerName to avoid warnings and potential redirect issues
+# Set ServerName globally to avoid warnings and potential redirect issues
 if [ -n "$PS_DOMAIN" ]; then
     echo "ServerName $PS_DOMAIN" > /etc/apache2/conf-available/servername.conf
     a2enconf servername
+    echo "ServerName $PS_DOMAIN" >> /etc/apache2/apache2.conf
 fi
+
+# Ensure permissions at runtime (especially for volumes)
+chown -R www-data:www-data /var/www/html/img /var/www/html/themes /var/www/html/modules /var/www/html/var
+chmod -R 755 /var/www/html/img /var/www/html/themes
 
 # Force HTTPS detection from Railway's Reverse Proxy
 echo "SetEnvIf X-Forwarded-Proto https HTTPS=on" > /etc/apache2/conf-available/proxy-https.conf
