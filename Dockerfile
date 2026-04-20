@@ -3,6 +3,9 @@ FROM prestashop/base:8.1-apache AS builder
 
 WORKDIR /var/www/html
 
+# Install dependencies needed for Composer and assets
+RUN apt-get update && apt-get install -y git unzip zip curl gnupg && rm -rf /var/lib/apt/lists/*
+
 # Install Composer
 RUN php -r "copy('https://getcomposer.org/installer', '/tmp/composer-setup.php');" && \
     php /tmp/composer-setup.php --no-ansi --install-dir=/usr/local/bin --filename=composer && \
@@ -18,7 +21,7 @@ COPY . .
 RUN mkdir -p modules themes override
 
 # Install composer dependencies
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --ignore-platform-reqs
 
 # Install Node.js and build assets
 RUN apt-get update && apt-get install -y curl gnupg && \
