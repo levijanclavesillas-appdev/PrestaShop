@@ -34,6 +34,20 @@ else
     export PS_TRUSTED_PROXIES="10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
 fi
 
+# Update Shop Domain in Database if PS_DOMAIN is set and app is installed
+if [ -n "$PS_DOMAIN" ] && [ -f ./app/config/parameters.php ]; then
+    echo "Updating PrestaShop domain to: $PS_DOMAIN"
+    # We run this in the background after a short delay to ensure DB is ready and Apache is starting
+    (
+        sleep 30
+        php bin/console prestashop:config set PS_SHOP_DOMAIN --value="$PS_DOMAIN" || true
+        php bin/console prestashop:config set PS_SHOP_DOMAIN_SSL --value="$PS_DOMAIN" || true
+        # Update shop_url table directly as well for the main shop
+        mysql -h "$DB_SERVER" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWD" "$DB_NAME" -e "UPDATE ps_shop_url SET domain='$PS_DOMAIN', domain_ssl='$PS_DOMAIN' WHERE id_shop=1;" || true
+        echo "Domain update completed."
+    ) &
+fi
+
 # PrestaShop official image uses /tmp/docker_run.sh as its entrypoint logic.
 # It handles installation if DB_* variables are provided and PS_INSTALL_AUTO=1.
 if [ -f /tmp/docker_run.sh ]; then
