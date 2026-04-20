@@ -67,10 +67,12 @@ if [ -n "$PS_DOMAIN" ] && [ -f ./app/config/parameters.php ]; then
         sleep 30
         php bin/console prestashop:config set PS_SHOP_DOMAIN --value="$PS_DOMAIN" || true
         php bin/console prestashop:config set PS_SHOP_DOMAIN_SSL --value="$PS_DOMAIN" || true
+        # Enable Friendly URLs
+        php bin/console prestashop:config set PS_REWRITING_SETTINGS --value="1" || true
         # Disable IP check for cookies (essential for proxies/load balancers)
         php bin/console prestashop:config set PS_COOKIE_CHECKIP --value="0" || true
         # Update shop_url table directly as well for the main shop
-        mysql -h "$DB_SERVER" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWD" "$DB_NAME" -e "UPDATE ps_shop_url SET domain='$PS_DOMAIN', domain_ssl='$PS_DOMAIN' WHERE id_shop=1;" || true
+        mysql -h "$DB_SERVER" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWD" "$DB_NAME" -e "UPDATE ps_shop_url SET domain='$PS_DOMAIN', domain_ssl='$PS_DOMAIN', main=1 WHERE id_shop=1;" || true
         # Restrict countries to Southeast Asia (SEA)
         echo "Restricting countries to SEA (PH, SG, MY, ID, TH, VN, BN, KH, LA, MM, TL)..."
         mysql -h "$DB_SERVER" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWD" "$DB_NAME" -e "UPDATE ps_country SET active=0; UPDATE ps_country SET active=1 WHERE iso_code IN ('PH', 'SG', 'MY', 'ID', 'TH', 'VN', 'BN', 'KH', 'LA', 'MM', 'TL');" || true
