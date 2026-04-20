@@ -1,0 +1,17 @@
+.git
+.github
+.ai
+.claude
+.cursor
+.windsurf
+node_modules
+vendor
+var/cache
+var/logs
+*.log
+.env
+docker-compose.yml
+docker-compose.*.yml
+Dockerfile
+railway.json
+README_RAILWAY.md
