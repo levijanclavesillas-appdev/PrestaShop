@@ -29,11 +29,15 @@ sed -i "s/Listen 80/Listen $REAL_PORT/g" /etc/apache2/ports.conf
 echo "<VirtualHost *:$REAL_PORT>
     DocumentRoot /var/www/html
     <Directory /var/www/html>
-        Options Indexes FollowSymLinks
+        Options +FollowSymLinks
         AllowOverride All
         Require all granted
     </Directory>
 </VirtualHost>" > /etc/apache2/sites-available/000-default.conf
+
+# Enable the site and ensure other configs don't interfere
+a2ensite 000-default || true
+a2enmod rewrite || true
 
 # Set ServerName globally to avoid warnings and potential redirect issues
 if [ -n "$PS_DOMAIN" ]; then
@@ -72,8 +76,10 @@ if [ -n "$PS_DOMAIN" ] && [ -f ./app/config/parameters.php ]; then
         sleep 30
         php bin/console prestashop:config set PS_SHOP_DOMAIN --value="$PS_DOMAIN" || true
         php bin/console prestashop:config set PS_SHOP_DOMAIN_SSL --value="$PS_DOMAIN" || true
-        # Enable Friendly URLs
+        # Enable Friendly URLs and regenerate .htaccess
+        echo "Regenerating Friendly URLs and .htaccess..."
         php bin/console prestashop:config set PS_REWRITING_SETTINGS --value="1" || true
+        php -r "require 'config/config.inc.php'; Tools::generateHtaccess();" || true
         # Disable IP check for cookies (essential for proxies/load balancers)
         php bin/console prestashop:config set PS_COOKIE_CHECKIP --value="0" || true
         # Update shop_url table directly as well for the main shop
