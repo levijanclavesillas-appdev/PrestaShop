@@ -17,13 +17,23 @@ echo "upload_max_filesize = 128M" > /usr/local/etc/php/conf.d/uploads.ini
 echo "post_max_size = 128M" >> /usr/local/etc/php/conf.d/uploads.ini
 echo "memory_limit = 512M" >> /usr/local/etc/php/conf.d/uploads.ini
 
-# Railway provides the PORT environment variable.
-# Apache by default is configured to listen on port 80.
+# Ensure mod_rewrite is enabled
+a2enmod rewrite || true
+
 # Use Railway's PORT or default to 80
 REAL_PORT=${PORT:-80}
 echo "Configuring Apache to listen on port $REAL_PORT"
 sed -i "s/Listen 80/Listen $REAL_PORT/g" /etc/apache2/ports.conf
-sed -i "s/<VirtualHost \*:80>/<VirtualHost \*:$REAL_PORT>/g" /etc/apache2/sites-available/000-default.conf
+
+# Update Apache site config to allow overrides and use correct port
+echo "<VirtualHost *:$REAL_PORT>
+    DocumentRoot /var/www/html
+    <Directory /var/www/html>
+        Options Indexes FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+</VirtualHost>" > /etc/apache2/sites-available/000-default.conf
 
 # Set ServerName to avoid warnings and potential redirect issues
 if [ -n "$PS_DOMAIN" ]; then
@@ -61,7 +71,10 @@ if [ -n "$PS_DOMAIN" ] && [ -f ./app/config/parameters.php ]; then
         php bin/console prestashop:config set PS_COOKIE_CHECKIP --value="0" || true
         # Update shop_url table directly as well for the main shop
         mysql -h "$DB_SERVER" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWD" "$DB_NAME" -e "UPDATE ps_shop_url SET domain='$PS_DOMAIN', domain_ssl='$PS_DOMAIN' WHERE id_shop=1;" || true
-        echo "Domain and session configuration updated."
+        # Restrict countries to Southeast Asia (SEA)
+        echo "Restricting countries to SEA (PH, SG, MY, ID, TH, VN, BN, KH, LA, MM, TL)..."
+        mysql -h "$DB_SERVER" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWD" "$DB_NAME" -e "UPDATE ps_country SET active=0; UPDATE ps_country SET active=1 WHERE iso_code IN ('PH', 'SG', 'MY', 'ID', 'TH', 'VN', 'BN', 'KH', 'LA', 'MM', 'TL');" || true
+        echo "SEA Country restriction and session configuration updated."
     ) &
 fi
 
