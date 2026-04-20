@@ -35,7 +35,13 @@ if [ -n "$PS_TRUSTED_PROXIES" ]; then
     echo "Configuring trusted proxies: $PS_TRUSTED_PROXIES"
 else
     # Default to common Railway/Docker proxy ranges if not set
-    export PS_TRUSTED_PROXIES="10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
+    export PS_TRUSTED_PROXIES="10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,127.0.0.1"
+fi
+
+# Clear PrestaShop/Symfony cache to apply new settings
+if [ -f bin/console ]; then
+    echo "Clearing cache..."
+    php bin/console cache:clear --no-warmup || true
 fi
 
 # Update Shop Domain in Database if PS_DOMAIN is set and app is installed
