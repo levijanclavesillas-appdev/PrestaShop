@@ -33,8 +33,8 @@ FROM prestashop/prestashop:8.1-apache
 COPY --from=builder /var/www/html /var/www/html
 
 # Fix Apache MPM conflict (More than one MPM loaded)
-RUN a2dismod mpm_event mpm_worker || true && \
-    a2enmod mpm_prefork || true
+RUN find /etc/apache2/mods-enabled -name "mpm_*.load" -not -name "mpm_prefork.load" -delete && \
+    find /etc/apache2/mods-enabled -name "mpm_*.conf" -not -name "mpm_prefork.conf" -delete || true
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html

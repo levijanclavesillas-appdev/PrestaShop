@@ -8,6 +8,10 @@ export DB_SERVER=${DB_SERVER:-$MYSQLHOST}
 export DB_PORT=${DB_PORT:-$MYSQLPORT}
 export DB_NAME=${DB_NAME:-$MYSQLDATABASE}
 
+# Fix Apache MPM conflict at runtime
+a2dismod mpm_event mpm_worker || true
+a2enmod mpm_prefork || true
+
 # Railway provides the PORT environment variable.
 # Apache by default is configured to listen on port 80.
 if [ -n "$PORT" ]; then
