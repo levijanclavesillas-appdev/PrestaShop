@@ -8,8 +8,8 @@
     "numReplicas": 1,
     "sleepApplication": false,
     "restartPolicyType": "ON_FAILURE",
-    "healthCheckPath": "/",
-    "healthCheckTimeout": 300,
+    "healthCheckPath": "/index.php",
+    "healthCheckTimeout": 600,
     "runtime": "V2"
   }
 }
