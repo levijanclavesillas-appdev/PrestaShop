@@ -26,6 +26,10 @@ if [ -n "$PS_DOMAIN" ]; then
     a2enconf servername
 fi
 
+# Force HTTPS detection from Railway's Reverse Proxy
+echo "SetEnvIf X-Forwarded-Proto https HTTPS=on" > /etc/apache2/conf-available/proxy-https.conf
+a2enconf proxy-https
+
 # Configure Trusted Proxies for Railway (standard for reverse proxies)
 if [ -n "$PS_TRUSTED_PROXIES" ]; then
     echo "Configuring trusted proxies: $PS_TRUSTED_PROXIES"
