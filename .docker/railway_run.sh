@@ -12,6 +12,11 @@ export DB_NAME=${DB_NAME:-$MYSQLDATABASE}
 a2dismod mpm_event mpm_worker || true
 a2enmod mpm_prefork || true
 
+# Increase PHP upload limits for modules
+echo "upload_max_filesize = 128M" > /usr/local/etc/php/conf.d/uploads.ini
+echo "post_max_size = 128M" >> /usr/local/etc/php/conf.d/uploads.ini
+echo "memory_limit = 512M" >> /usr/local/etc/php/conf.d/uploads.ini
+
 # Railway provides the PORT environment variable.
 # Apache by default is configured to listen on port 80.
 # Use Railway's PORT or default to 80
