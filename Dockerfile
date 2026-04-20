@@ -8,16 +8,17 @@ RUN php -r "copy('https://getcomposer.org/installer', '/tmp/composer-setup.php')
     php /tmp/composer-setup.php --no-ansi --install-dir=/usr/local/bin --filename=composer && \
     rm -rf /tmp/composer-setup.php
 
-# Copy only composer and package files first for better caching
-COPY composer.json composer.lock ./
+# Set Composer environment variables
+ENV COMPOSER_ALLOW_SUPERUSER=1
+
+# Copy everything first to ensure autoloader and plugins have access to all files
+COPY . .
+
 # PrestaShop needs some folders to exist for composer plugins
 RUN mkdir -p modules themes override
 
 # Install composer dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction
-
-# Copy the rest of the source code
-COPY . .
 
 # Install Node.js and build assets
 RUN apt-get update && apt-get install -y curl gnupg && \
