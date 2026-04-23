@@ -3,6 +3,7 @@ if (!defined('_PS_VERSION_')) {
     exit;
 }
 
+
 class Xenditpay extends PaymentModule
 {
     public function __construct()
@@ -27,6 +28,7 @@ class Xenditpay extends PaymentModule
 
         $this->displayName = $this->l('Xendit Payment');
         $this->description = $this->l('Accept payments via Xendit gateway.');
+
         $this->confirmUninstall = $this->l('Are you sure you want to uninstall?');
     }
 
@@ -48,6 +50,8 @@ class Xenditpay extends PaymentModule
         }
         return true;
     }
+
+
 
     public function getContent()
     {
