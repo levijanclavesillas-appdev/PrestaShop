@@ -89,16 +89,24 @@ if [ -n "$PS_DOMAIN" ] && [ -f ./app/config/parameters.php ]; then
         mysql -h "$DB_SERVER" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWD" "$DB_NAME" -e "UPDATE ps_country SET active=0; UPDATE ps_country SET active=1 WHERE iso_code IN ('PH', 'SG', 'MY', 'ID', 'TH', 'VN', 'BN', 'KH', 'LA', 'MM', 'TL');" || true
         
         # Authorize instapayment for all active countries, currencies, and groups
-        echo "Authorizing instapayment module..."
+        echo "Authorizing instapayment and linking carriers..."
         mysql -h "$DB_SERVER" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWD" "$DB_NAME" -e "
             SET @module_id = (SELECT id_module FROM ps_module WHERE name = 'instapayment');
             INSERT IGNORE INTO ps_module_country (id_module, id_shop, id_country) SELECT @module_id, 1, id_country FROM ps_country WHERE active = 1;
             INSERT IGNORE INTO ps_module_currency (id_module, id_shop, id_currency) SELECT @module_id, 1, id_currency FROM ps_currency WHERE active = 1;
             INSERT IGNORE INTO ps_module_group (id_module, id_shop, id_group) SELECT @module_id, 1, id_group FROM ps_group;
             INSERT IGNORE INTO ps_module_carrier (id_module, id_shop, id_reference) SELECT @module_id, 1, id_reference FROM ps_carrier WHERE active = 1 AND deleted = 0;
+            
+            -- Ensure all active carriers are linked to all zones (fixes missing shipping step)
+            INSERT IGNORE INTO ps_carrier_zone (id_carrier, id_zone) 
+            SELECT c.id_carrier, z.id_zone FROM ps_carrier c CROSS JOIN ps_zone z WHERE c.active = 1 AND c.deleted = 0 AND z.active = 1;
+            
+            -- Ensure all active carriers have tax rules (even if 0)
+            INSERT IGNORE INTO ps_carrier_tax_rules_group_shop (id_carrier, id_tax_rules_group, id_shop)
+            SELECT id_carrier, 0, 1 FROM ps_carrier WHERE active = 1 AND deleted = 0;
         " || true
         
-        echo "SEA Country restriction and instapayment authorization completed."
+        echo "SEA Country restriction, instapayment authorization, and carrier mapping completed."
     ) &
 fi
 
