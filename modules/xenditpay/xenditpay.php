@@ -5,7 +5,7 @@ if (!defined('_PS_VERSION_')) {
 
 use PrestaShop\PrestaShop\Core\Payment\PaymentOption;
 
-class XenditPay extends PaymentModule
+class Xenditpay extends PaymentModule
 {
     public function __construct()
     {
